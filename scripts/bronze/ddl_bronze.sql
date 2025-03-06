@@ -1,106 +1,64 @@
-create or alter procedure bronze.load_bronze as 
-begin
-	declare @start_time datetime, @end_time datetime, @batch_start_time datetime, @batch_end_time datetime;
-	begin try
-		set @batch_start_time = GETDATE();
-			print '=========================='
-			print 'Loading Bronze layer'
-			print '=========================='
-			truncate table bronze.crm_cust_info; 
+IF OBJECT_ID ('bronze.crm_cust_info', 'U') IS NOT NULL
+ DROP TABLE bronze.crm_cust_info;
+create table bronze.crm_cust_info(
+cst_id int,	
+cst_key	nvarchar(50),
+cst_firstname	nvarchar(50),
+cst_lastname	nvarchar(50),
+cst_marital_status	nvarchar(50),
+cst_gndr	nvarchar(50),
+cst_create_date date
+)
 
-			print '---------------------------------'
-			print 'Loading CRM Tables '
-			print '---------------------------------'
 
-			set @start_time = GETDATE();
-			truncate table bronze.crm_cust_info; 
-			bulk insert bronze.crm_cust_info
-			from 'C:\DW_Project\Sourcces\datasets\source_crm\cust_info.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time = GETDATE();
-			print 'CRM_CUST_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
+IF OBJECT_ID ('bronze.crm_prd_info', 'U') IS NOT NULL
+ DROP TABLE bronze.crm_prd_info;
+create table bronze.crm_prd_info(
+prd_id	int,
+prd_key	nvarchar(50),
+prd_nm	nvarchar(50),
+prd_cost	int,
+prd_line	nvarchar(50),
+prd_start_dt	date,
+prd_end_dt date
 
-			set @start_time = GETDATE();
-			truncate table bronze.crm_prd_info; 
-			bulk insert bronze.crm_prd_info
-			from 'C:\DW_Project\Sourcces\datasets\source_crm\prd_info.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time= GETDATE();
-			print 'CRM_PRD_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
- 
-			set @start_time=GETDATE();
-			truncate table bronze.crm_sales_details; 
-			bulk insert bronze.crm_sales_details
-			from 'C:\DW_Project\Sourcces\datasets\source_crm\sales_details.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time = GETDATE()
-			print 'CRM_SALES_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
+);
 
- 
-			print '---------------------------------'
-			print 'Loading ERP Tables '
-			print '---------------------------------'
+IF OBJECT_ID ('bronze.crm_sales_details', 'U') IS NOT NULL
+ DROP TABLE bronze.crm_sales_details;
+create table bronze.crm_sales_details(
+sls_ord_num	nvarchar(50),
+sls_prd_key	nvarchar(50),
+sls_cust_id	int,
+sls_order_dt int,	
+sls_ship_dt	int,
+sls_due_dt	int,
+sls_sales	int,
+sls_quantity	int,
+sls_price int,
+);
 
-			set @start_time = GETDATE();
-			truncate table bronze.erp_cust_az12; 
-			bulk insert bronze.erp_cust_az12
-			from 'C:\DW_Project\Sourcces\datasets\source_erp\CUST_AZ12.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time = GETDATE();
-			print 'ERP_CUST_AZ12_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
+IF OBJECT_ID ('bronze.erp_loc_a101', 'U') IS NOT NULL
+ DROP TABLE bronze.erp_loc_a101;
+create table bronze.erp_loc_a101(
+cid NVARCHAR(50),
+cntry NVARCHAR(50),
+);
 
-			set @start_time = GETDATE();
-			truncate table bronze.erp_LOC_A101; 
+IF OBJECT_ID ('bronze.crp_cust_az12', 'U') IS NOT NULL
+ DROP TABLE bronze.crp_cust_az12;
+create table bronze.crp_cust_az12(
+cid NVARCHAR(50),
+bdate date,
+gen NVARCHAR(50),
+);
 
-			bulk insert bronze.erp_LOC_A101
-			from 'C:\DW_Project\Sourcces\datasets\source_erp\LOC_A101.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time = GETDATE();
- 			print 'ERP_LOC_A101_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
+IF OBJECT_ID ('bronze.erp_px_cat_g1v2', 'U') IS NOT NULL
+ DROP TABLE bronze.erp_px_cat_g1v2;
+create table bronze.erp_px_cat_g1v2(
+id NVARCHAR(50),
+cat NVARCHAR(50),
+subcat NVARCHAR(50),
+mainteance NVARCHAR(50)
+);
 
-			set @start_time = GETDATE();
-			truncate table bronze.erp_PX_CAT_G1V2; 
-			bulk insert bronze.erp_PX_CAT_G1V2
-			from 'C:\DW_Project\Sourcces\datasets\source_erp\PX_CAT_G1V2.csv'
-			with (
-				firstrow=2,
-				fieldterminator=',',
-				tablock
-			);
-			set @end_time = GETDATE();
-			print 'ERP_PX_CAT_G1V2_INFO >> Load Duration : ' + cast(datediff(second,@start_time,@end_time) as nvarchar) + ' seconds';
-			print '=============================='
-			print 'Loading Bronze layer Finished'
-			print '=============================='
-	set @batch_end_time = GETDATE();
-	print 'Total Load Duration : ' + cast(datediff(second,@batch_start_time,@batch_end_time) as nvarchar) + ' seconds';
-
-	End try
-	begin catch
-			print '=============================='
-			print 'Error has occuard wile loading'
-			print 'Error message' + Error_message();
-			print '=============================='
-	end catch
-	
-end;
